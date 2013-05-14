@@ -77,6 +77,7 @@ public class glesRenderer implements Renderer {
 	// 상태 리스트
 	private final int IDEAL_STATE = 0;
 	private final int INPUT_DOT_STATE = 1;
+	private final int INPUT_LINE_STATE = 2;
 	
 	// 현재 상태
 	int state = IDEAL_STATE;
@@ -100,6 +101,10 @@ public class glesRenderer implements Renderer {
 		case INPUT_DOT_STATE: // 점 그리기
 			Dot.onTouchEvent(event, context, this);
 			break;
+			
+		case INPUT_LINE_STATE:
+			Line.onTouchEvent(event, context, this);
+			break;
 
 		default:
 			break;
@@ -114,9 +119,16 @@ public class glesRenderer implements Renderer {
 		switch (state) {
 		case IDEAL_STATE:
 			menu.add(0, 0, 0, "점 그리기");		
-			menu.add(0, 1, 0, "편집");
+			menu.add(0, 1, 0, "선 그리기");
+			menu.add(0, 2, 0, "편집");
 			break;
 		case INPUT_DOT_STATE: 
+			menu.add(0, 0, 0, "크기 설정");
+			menu.add(0, 1, 0, "색 설정");
+			menu.add(0, 2, 0, "완료");
+			break;
+			
+		case INPUT_LINE_STATE: 
 			menu.add(0, 0, 0, "크기 설정");
 			menu.add(0, 1, 0, "색 설정");
 			menu.add(0, 2, 0, "완료");
@@ -135,15 +147,22 @@ public class glesRenderer implements Renderer {
 		case IDEAL_STATE:
 			switch (item.getItemId()) {
 			case 0: 
-				state = 1;
+				state = INPUT_DOT_STATE;
 				Toast.makeText(context, "메뉴를 눌러 속성을 설정하고 화면에 입력하세요.", Toast.LENGTH_SHORT).show();
 				break;
 			case 1:
+				state = INPUT_LINE_STATE;
+				Toast.makeText(context, "메뉴를 눌러 속성을 설정하고 화면에 입력하세요.", Toast.LENGTH_SHORT).show();
+				break;
+			case 2:
 				break;
 			}
 			break;
 		case INPUT_DOT_STATE: // 점 그리기
 			Dot.onOptionsItemSelected(item, context, this);
+			break;
+		case INPUT_LINE_STATE: // 점 그리기
+			Line.onOptionsItemSelected(item, context, this);
 			break;
 		default:
 			break;
