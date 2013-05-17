@@ -69,6 +69,14 @@ public class glesRenderer implements Renderer {
 	public static final int INPUT_CIRCLE_STATE = 4;
 	public static final int INPUT_OVAL_STATE = 5;
 	public static final int INPUT_POLYGON_STATE = 6;
+	public static final int EDIT_STATE = 7;
+	
+	public static final int EDIT_DOT_STATE = 7;
+	public static final int EDIT_LINE_STATE = 7;
+	public static final int EDIT_POLYLINE_STATE = 7;
+	public static final int EDIT_CIRCLE_STATE = 7;
+	public static final int EDIT_OVAL_STATE = 7;
+	public static final int EDIT_POLYGON_STATE = 7;
 	
 	// 현재 상태
 	int state;
@@ -90,17 +98,29 @@ public class glesRenderer implements Renderer {
 			break;
 		case INPUT_DOT_STATE: // 점 그리기
 			Dot.initialize();
-			Toast.makeText(context, "점그리기 모드 : 메뉴를 눌러 속성을 설정하고 화면에 입력하세요.", Toast.LENGTH_SHORT).show();
+			Toast.makeText(context, "점그리기 : 메뉴를 눌러 속성을 설정하고 화면에 입력하세요.", Toast.LENGTH_SHORT).show();
 			break;
 			
 		case INPUT_LINE_STATE:
 			Line.initialize();
-			Toast.makeText(context, "선그리기 모드 : 메뉴를 눌러 속성을 설정하고 화면에 입력하세요.", Toast.LENGTH_SHORT).show();
+			Toast.makeText(context, "선그리기 : 메뉴를 눌러 속성을 설정하고 화면에 입력하세요.", Toast.LENGTH_SHORT).show();
 			break;
 			
 		case INPUT_POLYLINE_STATE:
 			PolyLine.initialize();
-			Toast.makeText(context, "연속선그리기 모드 : 메뉴를 눌러 속성을 설정하고 화면에 입력하세요.", Toast.LENGTH_SHORT).show();
+			Toast.makeText(context, "연속선그리기 : 메뉴를 눌러 속성을 설정하고 화면에 입력하세요.", Toast.LENGTH_SHORT).show();
+			break;
+			
+		case INPUT_CIRCLE_STATE:
+			break;
+		case INPUT_OVAL_STATE:
+			break;
+		case INPUT_POLYGON_STATE:
+			Polygon.initialize();
+			Toast.makeText(context, "다각형그리기 : 메뉴를 눌러 속성을 설정하고 화면에 입력하세요.", Toast.LENGTH_SHORT).show();
+			
+			break;
+		case EDIT_STATE:
 			break;
 
 		default:
@@ -127,6 +147,16 @@ public class glesRenderer implements Renderer {
 		case INPUT_POLYLINE_STATE:
 			PolyLine.onTouchEvent(event, context, this);
 			break;
+			
+		case INPUT_CIRCLE_STATE:
+			break;
+		case INPUT_OVAL_STATE:
+			break;
+		case INPUT_POLYGON_STATE:
+			Polygon.onTouchEvent(event, context, this);
+			break;
+		case EDIT_STATE:
+			break;
 
 		default:
 			break;
@@ -138,12 +168,16 @@ public class glesRenderer implements Renderer {
 	// 메뉴에 대한 layout 설정
 	public boolean onPrepareOptionsMenu(Menu menu) {
 		menu.clear();
+//		menu.add(0, 100, 0, "temp");		
 		switch (state) {
 		case IDEAL_STATE:
-			menu.add(0, 0, 0, "점 그리기");		
-			menu.add(0, 1, 0, "선 그리기");
-			menu.add(0, 2, 0, "연속선 그리기");
-			menu.add(0, 3, 0, "편집");
+			menu.add(0, INPUT_DOT_STATE, 0, "점 그리기");		
+			menu.add(0, INPUT_LINE_STATE, 1, "선 그리기");
+			menu.add(0, INPUT_POLYLINE_STATE, 2, "연속선 그리기");
+//			menu.add(0, INPUT_CIRCLE_STATE, 3, "원 그리기");
+//			menu.add(0, INPUT_OVAL_STATE, 4, "타원 그리기");
+			menu.add(0, INPUT_POLYGON_STATE, 5, "다각형 그리기");
+//			menu.add(0, EDIT_STATE, 6, "편집");
 			break;
 		case INPUT_DOT_STATE: 
 			Dot.onPrepareOptionsMenu(menu);
@@ -156,6 +190,22 @@ public class glesRenderer implements Renderer {
 		case INPUT_POLYLINE_STATE: 
 			PolyLine.onPrepareOptionsMenu(menu);
 			break;
+			
+//		case INPUT_CIRCLE_STATE:
+//			break;
+//		case INPUT_OVAL_STATE: 
+//			break;
+		case INPUT_POLYGON_STATE:
+//			Toast.makeText(context, "INPUT_POLYGON_STATE", Toast.LENGTH_SHORT).show();
+			
+			Polygon.onPrepareOptionsMenu(menu);
+//			menu.add(0, 0, 0, "입력취소");
+//			Toast.makeText(context, "menu", Toast.LENGTH_SHORT).show();
+//			Polygon.onPrepareOptionsMenu(menu);
+			
+			break;
+//		case EDIT_STATE:
+//			break;
 
 		default:
 			break;
@@ -169,19 +219,7 @@ public class glesRenderer implements Renderer {
 		switch (state) {
 		case IDEAL_STATE:
 			// 그리기 모드의 각 도형 혹은 편집모드 선택
-			switch (item.getItemId()) {
-			case 0:
-				setState(INPUT_DOT_STATE);
-				break;
-			case 1:
-				setState(INPUT_LINE_STATE);
-				break;
-			case 2:
-				setState(INPUT_POLYLINE_STATE);
-				break;
-			case 3:
-				break;
-			}
+			setState(item.getItemId());
 			break;
 		case INPUT_DOT_STATE: // 점 그리기
 			Dot.onOptionsItemSelected(item, context, this);
@@ -192,6 +230,16 @@ public class glesRenderer implements Renderer {
 		case INPUT_POLYLINE_STATE: // 점 그리기
 			PolyLine.onOptionsItemSelected(item, context, this);
 			break;
+		case INPUT_CIRCLE_STATE: // 원 그리기
+			break;
+		case INPUT_OVAL_STATE: // 타원 그리기
+			break;
+		case INPUT_POLYGON_STATE: // 다각형 그리기
+			Polygon.onOptionsItemSelected(item, context, this);
+			break;
+		case EDIT_STATE: // 편집 모드
+			break;
+		
 		default:
 			break;
 		}

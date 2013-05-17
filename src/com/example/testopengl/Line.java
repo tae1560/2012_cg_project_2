@@ -2,15 +2,10 @@ package com.example.testopengl;
 
 import javax.microedition.khronos.opengles.GL10;
 
-import android.app.AlertDialog;
 import android.content.Context;
-import android.content.DialogInterface;
-import android.text.InputType;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
-import android.widget.EditText;
-import android.widget.Toast;
 
 public class Line extends Shape {
 	float[] mVertices = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};

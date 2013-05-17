@@ -10,10 +10,10 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.widget.Toast;
 
-public class PolyLine extends Shape {
+public class Polygon extends Shape {
 	Vector<PointData> mVertices = new Vector<PointData>();
 
-	PolyLine() {
+	Polygon() {
 //		mVertexBuffer = getFloatBufferFromFloatArray(new float[]{0f, 0f, 0f});
 	}
 
@@ -48,12 +48,21 @@ public class PolyLine extends Shape {
 	
 	
 	
-	void setLastPointPosition(float x, float y) {
+	boolean setLastPointPosition(float x, float y) {
 //		mVertices[3] = x - position.x;
 //		mVertices[4] = y - position.y;
 //		mVertexBuffer = getFloatBufferFromFloatArray(mVertices);
-		mVertices.lastElement().x = x;
-		mVertices.lastElement().y = y;
+		boolean isFinished = false;
+		
+		// 처음과 비슷하면 중력장 기능
+		if(mVertices.size()>2 && Math.pow(mVertices.firstElement().x - x, 2f) + Math.pow(mVertices.firstElement().y - y, 2f) < 2500) {
+			mVertices.lastElement().x = mVertices.firstElement().x;
+			mVertices.lastElement().y = mVertices.firstElement().y;
+			isFinished = true;
+		} else {
+			mVertices.lastElement().x = x;
+			mVertices.lastElement().y = y;
+		}
 		
 		// convert vector to array
 		float[] verticesArray = new float[mVertices.size() * 3];
@@ -64,6 +73,8 @@ public class PolyLine extends Shape {
 		}
 		
 		mVertexBuffer = getFloatBufferFromFloatArray(verticesArray);
+		
+		return isFinished;
 	}
 	
 	void setLastPointPosition(PointData point) {
@@ -71,20 +82,21 @@ public class PolyLine extends Shape {
 	}
 	
 	// ui
-	static PolyLine insertingShape = null;
+	static Polygon insertingShape = null;
 	static public boolean onTouchEvent(MotionEvent event, Context context, glesRenderer renderer) {
 		switch(event.getAction()) {
 		case MotionEvent.ACTION_UP:
-			insertingShape.setLastPointPosition(event.getX(), event.getY());
+			if(insertingShape.setLastPointPosition(event.getX(), event.getY()))
+				insertingShape = null;
 //			insertingShape = null;
 			break;
 		case MotionEvent.ACTION_DOWN: 
 			if (insertingShape == null) {
-				insertingShape = new PolyLine();
+				insertingShape = new Polygon();
 				insertingShape.setColor(option_color);
 				insertingShape.setSize(option_size);
 				
-				Toast.makeText(context, "입력을 완료하면 메뉴를 눌러 완료해주세요.", Toast.LENGTH_SHORT).show();
+				Toast.makeText(context, "입력을 완료하려면 다각형을 만들어야 합니다.", Toast.LENGTH_SHORT).show();
 				renderer.getShapes().add(insertingShape);
 			}
 			insertingShape.mVertices.add(new PointData(0f, 0f));
@@ -109,7 +121,7 @@ public class PolyLine extends Shape {
 			menu.add(0, 1, 0, "색 설정");
 			menu.add(0, 2, 0, "앞으로");
 		} else {
-			menu.add(0, 0, 0, "입력완료");
+			menu.add(0, 0, 0, "입력취소");
 		}
 		
 	}
@@ -129,6 +141,7 @@ public class PolyLine extends Shape {
 				break;
 			}
 		} else {
+			renderer.getShapes().remove(insertingShape);
 			insertingShape = null;
 		}
 		
