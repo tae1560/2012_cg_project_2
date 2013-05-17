@@ -5,16 +5,12 @@ import java.util.Vector;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
-import android.app.AlertDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.opengl.GLSurfaceView.Renderer;
 import android.opengl.GLU;
-import android.text.InputType;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
-import android.widget.EditText;
 import android.widget.Toast;
 
 public class glesRenderer implements Renderer {
@@ -26,6 +22,7 @@ public class glesRenderer implements Renderer {
 	public glesRenderer(Context context) {
 		// TODO Auto-generated constructor stub
 		this.context = context;
+		setState(IDEAL_STATE);
 	}
 	
 	// surface 가 처음 만들어 질때
@@ -46,6 +43,7 @@ public class glesRenderer implements Renderer {
 				GL10.GL_DEPTH_BUFFER_BIT);
 //		gl.glTranslatef(0, 0, -600f);
 		
+		// shapes에 저장된 도형들을 그린다.
 		for (int i = 0; i < shapes.size(); i++) {
 			Shape shape = shapes.get(i);
 			shape.draw(gl);
@@ -54,33 +52,26 @@ public class glesRenderer implements Renderer {
 
 	@Override
 	public void onSurfaceChanged(GL10 gl, int width, int height) {
-//		gl.glViewport(0, 0, width, height);    
-//		gl.glEnable(GL10.GL_TEXTURE_2D);
-//		gl.glMatrixMode(GL10.GL_PROJECTION);
-//		gl.glLoadIdentity();                   
-//		GLU.gluPerspective(gl, 45.0f, (float) width / height, 0.01f, 1000.0f);                    
-//		gl.glMatrixMode(GL10.GL_MODELVIEW);
-//
-//		gl.glLoadIdentity();
 		// viewport 를 디바이스의 화면과 일치시킴
 		gl.glViewport(0, 0, width, height);
-
 	    gl.glMatrixMode(GL10.GL_PROJECTION);
 	    gl.glLoadIdentity();
-	    
-	    // 직교투영
 	    GLU.gluOrtho2D(gl, 0, width, height, 0);
 	    gl.glMatrixMode(GL10.GL_MODELVIEW);
 	}
 
 	
 	// 상태 리스트
-	private final int IDEAL_STATE = 0;
-	private final int INPUT_DOT_STATE = 1;
-	private final int INPUT_LINE_STATE = 2;
+	public static final int IDEAL_STATE = 0;
+	public static final int INPUT_DOT_STATE = 1;
+	public static final int INPUT_LINE_STATE = 2;
+	public static final int INPUT_POLYLINE_STATE = 3;
+	public static final int INPUT_CIRCLE_STATE = 4;
+	public static final int INPUT_OVAL_STATE = 5;
+	public static final int INPUT_POLYGON_STATE = 6;
 	
 	// 현재 상태
-	int state = IDEAL_STATE;
+	int state;
 	
 	public int getState() {
 		return state;
@@ -88,9 +79,36 @@ public class glesRenderer implements Renderer {
 
 	public void setState(int state) {
 		this.state = state;
+		didChangedState(state);
 	}
+	
+	// state 바뀐 후 event
+	public void didChangedState(int state) {
+		switch (state) {
+		case IDEAL_STATE: // 제일 처음 시작시 터치를 하면 메시지 출력
+			Toast.makeText(context, "기본 모드 : 메뉴버튼을 눌러 메뉴를 선택하세요.", Toast.LENGTH_SHORT).show();
+			break;
+		case INPUT_DOT_STATE: // 점 그리기
+			Dot.initialize();
+			Toast.makeText(context, "점그리기 모드 : 메뉴를 눌러 속성을 설정하고 화면에 입력하세요.", Toast.LENGTH_SHORT).show();
+			break;
+			
+		case INPUT_LINE_STATE:
+			Line.initialize();
+			Toast.makeText(context, "선그리기 모드 : 메뉴를 눌러 속성을 설정하고 화면에 입력하세요.", Toast.LENGTH_SHORT).show();
+			break;
+			
+		case INPUT_POLYLINE_STATE:
+			PolyLine.initialize();
+			Toast.makeText(context, "연속선그리기 모드 : 메뉴를 눌러 속성을 설정하고 화면에 입력하세요.", Toast.LENGTH_SHORT).show();
+			break;
 
-	// 터치 이벤트에 대한 처리 => 각각의 도형 클래스가 일을 처리함
+		default:
+			break;
+		}
+	}
+		
+	// 터치 이벤트에 대한 처리
 	public boolean onTouchEvent(MotionEvent event) {
 		switch (state) {
 		case IDEAL_STATE: // 제일 처음 시작시 터치를 하면 메시지 출력
@@ -104,6 +122,10 @@ public class glesRenderer implements Renderer {
 			
 		case INPUT_LINE_STATE:
 			Line.onTouchEvent(event, context, this);
+			break;
+			
+		case INPUT_POLYLINE_STATE:
+			PolyLine.onTouchEvent(event, context, this);
 			break;
 
 		default:
@@ -120,18 +142,19 @@ public class glesRenderer implements Renderer {
 		case IDEAL_STATE:
 			menu.add(0, 0, 0, "점 그리기");		
 			menu.add(0, 1, 0, "선 그리기");
-			menu.add(0, 2, 0, "편집");
+			menu.add(0, 2, 0, "연속선 그리기");
+			menu.add(0, 3, 0, "편집");
 			break;
 		case INPUT_DOT_STATE: 
-			menu.add(0, 0, 0, "크기 설정");
-			menu.add(0, 1, 0, "색 설정");
-			menu.add(0, 2, 0, "완료");
+			Dot.onPrepareOptionsMenu(menu);
 			break;
 			
 		case INPUT_LINE_STATE: 
-			menu.add(0, 0, 0, "크기 설정");
-			menu.add(0, 1, 0, "색 설정");
-			menu.add(0, 2, 0, "완료");
+			Line.onPrepareOptionsMenu(menu);
+			break;
+			
+		case INPUT_POLYLINE_STATE: 
+			PolyLine.onPrepareOptionsMenu(menu);
 			break;
 
 		default:
@@ -145,16 +168,18 @@ public class glesRenderer implements Renderer {
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (state) {
 		case IDEAL_STATE:
+			// 그리기 모드의 각 도형 혹은 편집모드 선택
 			switch (item.getItemId()) {
-			case 0: 
-				state = INPUT_DOT_STATE;
-				Toast.makeText(context, "메뉴를 눌러 속성을 설정하고 화면에 입력하세요.", Toast.LENGTH_SHORT).show();
+			case 0:
+				setState(INPUT_DOT_STATE);
 				break;
 			case 1:
-				state = INPUT_LINE_STATE;
-				Toast.makeText(context, "메뉴를 눌러 속성을 설정하고 화면에 입력하세요.", Toast.LENGTH_SHORT).show();
+				setState(INPUT_LINE_STATE);
 				break;
 			case 2:
+				setState(INPUT_POLYLINE_STATE);
+				break;
+			case 3:
 				break;
 			}
 			break;
@@ -164,6 +189,9 @@ public class glesRenderer implements Renderer {
 		case INPUT_LINE_STATE: // 점 그리기
 			Line.onOptionsItemSelected(item, context, this);
 			break;
+		case INPUT_POLYLINE_STATE: // 점 그리기
+			PolyLine.onOptionsItemSelected(item, context, this);
+			break;
 		default:
 			break;
 		}
@@ -172,6 +200,8 @@ public class glesRenderer implements Renderer {
 		return true;
 	}
 
+	
+	// getter and setter
 	public Vector<Shape> getShapes() {
 		return shapes;
 	}

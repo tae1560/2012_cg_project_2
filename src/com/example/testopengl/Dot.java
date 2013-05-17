@@ -1,17 +1,11 @@
 package com.example.testopengl;
 
-import java.util.Vector;
-
 import javax.microedition.khronos.opengles.GL10;
 
-import android.app.AlertDialog;
 import android.content.Context;
-import android.content.DialogInterface;
-import android.text.InputType;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
-import android.widget.EditText;
-import android.widget.Toast;
 
 public class Dot extends Shape {
 	float[] mVertices = {0.0f, 0.0f, 0.0f};
@@ -39,33 +33,6 @@ public class Dot extends Shape {
 		gl.glDisableClientState(GL10.GL_VERTEX_ARRAY);     
 		
 		gl.glPopMatrix();
-	}
-	
-	
-	Point position = new Point(0, 0);
-	void setPosition(float x, float y){
-		position = new Point(x, y);
-	}
-	
-	void setPosition(Point point) {
-		position = new Point(point);
-	}
-	
-	Point getPosition() {
-		return position;
-	}
-	
-	ColorData color = new ColorData(1,1,1,1);
-	void setColor(float r, float g, float b, float a) {
-		this.color = new ColorData(r,g,b,a);
-	}
-	void setColor(ColorData color) {
-		this.color = new ColorData(color);
-	}
-	
-	float rotation = 0f;
-	void setRotation(float rotation) {
-		this.rotation = rotation;
 	}
 	
 	float size = 20.0f;
@@ -96,63 +63,28 @@ public class Dot extends Shape {
 		return true;
 	}
 	
-	static public float option_size = 20.0f;
-	static public ColorData option_color = new ColorData(1,1,1,1);
-	static public boolean onOptionsItemSelected(MenuItem item, final Context context, glesRenderer renderer) {
+	static public void initialize() {
+		option_size = 20.0f;
+		option_color = new ColorData(1,1,1,1);
+	}
+	
+	static public void onPrepareOptionsMenu(Menu menu) {
+		menu.add(0, 0, 0, "크기 설정");
+		menu.add(0, 1, 0, "색 설정");
+		menu.add(0, 2, 0, "앞으로");
+	}
+	
+	static public void onOptionsItemSelected(MenuItem item, final Context context, glesRenderer renderer) {
 		switch (item.getItemId()) {
 		case 0: 
-			AlertDialog.Builder builder = new AlertDialog.Builder(context);
-			builder.setTitle("속성을 선택하세요.");
-
-			// Set up the input
-			final EditText input = new EditText(context);
-			// Specify the type of input expected; this, for example, sets the input as a password, and will mask the text
-			input.setInputType(InputType.TYPE_CLASS_NUMBER);
-			input.setText(Integer.toString(Math.round(option_size)));
-			builder.setView(input);
-
-			// Set up the buttons
-			builder.setPositiveButton("OK", new DialogInterface.OnClickListener() { 
-			    @Override
-			    public void onClick(DialogInterface dialog, int which) {
-			         option_size = Integer.parseInt(input.getText().toString());
-			    }
-			});
-			builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-			    @Override
-			    public void onClick(DialogInterface dialog, int which) {
-			        dialog.cancel();
-			    }
-			});
-
-			builder.show();
-			
+			popupSizeDialog(context);
 			break;
 		case 1:
-			new ColorPickerDialog(context, 
-					new ColorPickerDialog.OnColorChangedListener() {
-						
-						@Override
-						public void colorChanged(String key, int color) {
-							// TODO Auto-generated method stub
-							Toast.makeText(context, key+ " color : " + ColorData.intToColor(color).a + " " + ColorData.intToColor(color).r + " " + ColorData.intToColor(color).g + " " + ColorData.intToColor(color).b , Toast.LENGTH_LONG).show();
-							Toast.makeText(context, key+ " color : " + Integer.toHexString(color) , Toast.LENGTH_LONG).show();
-							
-							option_color = ColorData.intToColor(color);
-						}
-					}, 
-					"DROIDS_COLOR_KEY", 
-					ColorData.colorToInt(option_color), 
-					ColorData.colorToInt(option_color)).show();
+			popupColorDialog(context);
 			break;
 		case 2:
-			// 기본값 복원
-			option_size = 20.0f;
-			option_color = new ColorData(1,1,1,1);
-			renderer.setState(0);
+			renderer.setState(glesRenderer.IDEAL_STATE);
 			break;
 		}
-		
-		return true;
 	}
 }
