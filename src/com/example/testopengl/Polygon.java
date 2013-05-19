@@ -186,6 +186,7 @@ public class Polygon extends Shape {
 	public double calculateDistance(PointData point) {
 		double dis1 = 9999;
 		
+		// 모든 선분중에서 가장 가까운 점과의 거리를 계산
 		PointData prevVertex = mVertices.lastElement();
 		for (PointData vertex : mVertices) {
 			if(prevVertex != null) {

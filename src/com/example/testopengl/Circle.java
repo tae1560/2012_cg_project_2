@@ -155,6 +155,7 @@ public class Circle extends Shape {
 	public double calculateDistance(PointData point) {
 		double dis1 = 9999;
 		
+		// 모든 선분으로부터 거리 계산
 		PointData prevVertex = new PointData(mVertices[360*3 - 3], mVertices[360*3 - 2]);
 		for (int i = 0; i < mVertices.length; i+=3) {
 			PointData vertex = new PointData(mVertices[i], mVertices[i+1]);

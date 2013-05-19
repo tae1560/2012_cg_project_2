@@ -53,6 +53,7 @@ public class glesRenderer implements Renderer {
 		}
 	}
 
+	// 텍스처 보관용 배열
 	public static int mMaterialBookTexture[] = new int[1];
 	
 	@Override
@@ -121,7 +122,7 @@ public class glesRenderer implements Renderer {
 				selectedShape = null;
 			}
 			break;
-		case INPUT_DOT_STATE: // 점 그리기
+		case INPUT_DOT_STATE:
 			Dot.initialize();
 			Toast.makeText(context, "점그리기 : 메뉴를 눌러 속성을 설정하고 화면에 입력하세요.", Toast.LENGTH_SHORT).show();
 			break;
@@ -148,6 +149,7 @@ public class glesRenderer implements Renderer {
 			
 			break;
 		case EDIT_STATE:
+			// 편집모드로 들어왔을때 선택되었던 것은 선택 취소
 			if(selectedShape != null) {
 				selectedShape.onUnselected();
 				selectedShape = null;
@@ -172,7 +174,7 @@ public class glesRenderer implements Renderer {
 				Toast.makeText(context, "메뉴버튼을 눌러 메뉴를 선택하세요.", Toast.LENGTH_SHORT).show();
 			}
 			break;
-		case INPUT_DOT_STATE: // 점 그리기
+		case INPUT_DOT_STATE: 
 			Dot.onTouchEvent(event, context, this);
 			break;
 			
@@ -199,6 +201,7 @@ public class glesRenderer implements Renderer {
 				Shape min_shape = null;
 				PointData point = new PointData(event.getX(), event.getY());
 				
+				// 모든 도형으로부터 터치점의 거리를 계산 해서 가장 가까운 점을 찾는다.
 				for (Shape shape : shapes) {
 					double dis = shape.calculateDistance(point);
 					if (min_dis > dis) {
@@ -207,6 +210,7 @@ public class glesRenderer implements Renderer {
 					}
 				}
 				
+				// 가장 가까운 점이 50 픽셀 거리안에 있으면 선택된 것으로 인식
 				if (min_shape != null && min_dis < 50) {
 					// finallize pre selected shape
 					if(selectedShape != null) {
@@ -235,8 +239,10 @@ public class glesRenderer implements Renderer {
 					
 							
 				// drag, zoom, rotate
+				// 터치가 하나면 드래그, 두개면 터치간 거리는 확대축소, 터치의 각도는 회전으로 인식한다.
 				switch(event.getAction()) {
 				case MotionEvent.ACTION_UP:
+					// 외부 터치시 선택 취소
 					if(!isSelecting && isFirstSingleTouch && isFirstDoubleTouch)
 						setState(EDIT_STATE);
 					
@@ -252,7 +258,7 @@ public class glesRenderer implements Renderer {
 					if (event.getPointerCount() == 1 && isSelecting) {
 						// one touch => drag
 						if (!isFirstSingleTouch) {
-							
+							// 이동시키기
 							float diffX = event.getX() - prevX;
 							float diffY = event.getY() - prevY;
 							selectedShape.setPosition(selectedShape.getPosition().x + diffX, selectedShape.getPosition().y + diffY);
@@ -264,8 +270,11 @@ public class glesRenderer implements Renderer {
 						prevY = event.getY();
 					} else if (event.getPointerCount() == 2) {
 						// double touches => scale and rotation
+						// 터치간 거리 계산
 						float currentDistance = (float) (Math.pow(event.getX(0) - event.getX(1), 2) + Math.pow(event.getY(0) - event.getY(1), 2));
 						currentDistance = (float)Math.sqrt((float)currentDistance);
+						
+						// 터치간 각도 계산
 						float currentRotation = (float) Math.atan((event.getY(0) - event.getY(1)) / (event.getX(0) - event.getX(1)));
 						currentRotation += Math.PI;
 						currentRotation = (float) ShapeUtil.radianToDegree(currentRotation);
@@ -408,7 +417,6 @@ public class glesRenderer implements Renderer {
 			break;
 		}
 		
-		// TODO Auto-generated method stub
 		return true;
 	}
 

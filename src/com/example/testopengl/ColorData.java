@@ -1,5 +1,6 @@
 package com.example.testopengl;
 
+//색깔 저장을 위한 클래스
 public class ColorData {
 	public float r;
 	public float g;
@@ -20,6 +21,7 @@ public class ColorData {
 		this.a = color.a;
 	}
 	
+	// 16진수 int를 ColorData 클래스로 변경 
 	static ColorData intToColor(int i) {
 		int b = (i)&0xFF;
 		int g = (i>>8)&0xFF;
@@ -29,6 +31,7 @@ public class ColorData {
 		return new ColorData(r / 255f, g / 255f, b / 255f, a / 255f);
 	}
 	
+	// ColorData 클래스를 16진수 int로 변경
 	static int colorToInt(ColorData c) {
 		if (c == null) {
 			c = new ColorData(1f, 1f, 1f, 1f);

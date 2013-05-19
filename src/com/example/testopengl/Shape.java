@@ -26,12 +26,19 @@ abstract class Shape {
 	abstract void draw(GL10 gl);
 	
 	// selection
+	// 점과 도형의 거리 계산
 	abstract double calculateDistance(PointData point);
+	
+	// 각 도형의 state 표기
 	abstract int getState();
 	protected boolean isSelected = false;
+	
+	// 선택되었을경우의 표기박스
 	protected float[] selectBoxVertices = {0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f};
 	protected FloatBuffer selectBoxVertexBuffer = null;
 	protected float margin = 20;
+	
+	// 선택되고 선택취소될때 이벤트 함수
 	abstract void onSelected();
 	abstract void onUnselected();
 	
@@ -43,6 +50,7 @@ abstract class Shape {
 	// draw selection box
 	protected void drawSelectionBox(GL10 gl) {
 		if (isSelected) {
+			// 선택 되어있으면 선택박스 그리기
 			if (selectBoxVertexBuffer != null) {
 				gl.glPushMatrix();
 				gl.glColor4f(255 / 255f, 222 / 255f, 102 / 255f, 255 / 255f); 
@@ -54,6 +62,7 @@ abstract class Shape {
 		}
 	}
 	
+	// 선택박스가 point를 포함하는지 판단
 	protected boolean isSelctionBoxInclude(PointData point) {
 		PointData topLeft = new PointData(selectBoxVertices[0], selectBoxVertices[1]);
 		PointData bottomRight = new PointData(selectBoxVertices[6], selectBoxVertices[7]);
@@ -148,7 +157,7 @@ abstract class Shape {
 	
 	// input uis
 	
-	// input color ui
+	// input color ui - 선색깔
 	static public ColorData option_color;
 	public static void popupColorDialog(Context context) {
 		new ColorPickerDialog(context, 
@@ -165,7 +174,7 @@ abstract class Shape {
 				ColorData.colorToInt(option_color)).show();
 	}
 	
-	// input size ui
+	// input size ui - 선굵기, 점크기 설정
 	static public float option_size;
 	public static void popupSizeDialog(Context context) {
 		AlertDialog.Builder builder = new AlertDialog.Builder(context);
@@ -197,6 +206,7 @@ abstract class Shape {
 	
 	
 	// edit mode
+	// 색깔 변경
 	public static void popupEditColorDialog(Context context, final Shape shape) {
 		new ColorPickerDialog(context, 
 				new ColorPickerDialog.OnColorChangedListener() {
@@ -212,6 +222,7 @@ abstract class Shape {
 				ColorData.colorToInt(shape.getColor())).show();
 	}
 	
+	// 배경색깔 채우기
 	public static void popupEditBackgroundColorDialog(Context context, final Shape shape) {
 		new ColorPickerDialog(context, 
 				new ColorPickerDialog.OnColorChangedListener() {
@@ -227,6 +238,7 @@ abstract class Shape {
 				ColorData.colorToInt(shape.getBackgroundColor())).show();
 	}
 	
+	// 선굵기, 점크기 변경
 	public static void popupEditSizeDialog(Context context, final Shape shape) {
 		AlertDialog.Builder builder = new AlertDialog.Builder(context);
 		builder.setTitle("크기를 선택하세요.");
@@ -280,7 +292,7 @@ abstract class Shape {
 		return buffer;
 	}
 	
-	// 좌표계의 변환
+	// 좌표계의 변환 안드로이드 => OPENGL
 	PointData globalPointToLocalPoint(PointData point) {
 		PointData ret = ShapeUtil.translateDot(point, -position.x, -position.y);
 		ret = ShapeUtil.translateDot(ret, median.x, median.y);
@@ -290,6 +302,7 @@ abstract class Shape {
 		return ret;
 	}
 	
+	// 좌표계의 변환 OPENGL => 안드로이드 
 	PointData localPointToGlobalPoint(PointData point) {
 		PointData ret = ShapeUtil.translateDot(point, -median.x, -median.y);
 		ret = ShapeUtil.scaleDot(ret, scale, scale);

@@ -15,6 +15,7 @@ public class ShapeUtil {
 		PointData sp = new PointData(line1.x - point1.x, line1.y - point1.y);
 		PointData ep = new PointData(line2.x - point1.x, line2.y - point1.y);
 		
+		// 점과 선분과의 거리 공식은 http://helloneo.pe.kr/393 참조
 		double dis = 9999;
 		if((se.x*sp.x + se.y*sp.y) * (se.x*ep.x + se.y*ep.y) <= 0) {
 			// 선분 내부에 점이 있을경우
@@ -88,6 +89,7 @@ public class ShapeUtil {
 		float diffx = right - left;
 		float diffy = top - bottom;
 		
+		// 전체 boundary 에 비하여 위치하는 비율을 계산
 		for (PointData point : points) {
 			try {
 				float ratiox = (point.x - left) / diffx;

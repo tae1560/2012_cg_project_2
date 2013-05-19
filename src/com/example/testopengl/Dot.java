@@ -44,10 +44,8 @@ public class Dot extends Shape {
 		gl.glPopMatrix();
 	}
 	
+	// 기본 사이즈 오버라이딩 
 	float size = 20.0f;
-	void setSize(float size) {
-		this.size = size;
-	}
 	
 	// ui
 	static Dot insertingShape = null;

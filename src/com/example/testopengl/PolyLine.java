@@ -13,10 +13,6 @@ import android.widget.Toast;
 public class PolyLine extends Shape {
 	Vector<PointData> mVertices = new Vector<PointData>();
 
-	PolyLine() {
-//		mVertexBuffer = getFloatBufferFromFloatArray(new float[]{0f, 0f, 0f});
-	}
-
 	@Override
 	void draw(GL10 gl) {
 		gl.glPushMatrix();
@@ -55,11 +51,8 @@ public class PolyLine extends Shape {
 	
 	
 	
-	
+	// 마지막 입력중인 점의 위치 설정
 	void setLastPointPosition(float x, float y) {
-//		mVertices[3] = x - position.x;
-//		mVertices[4] = y - position.y;
-//		mVertexBuffer = getFloatBufferFromFloatArray(mVertices);
 		mVertices.lastElement().x = x;
 		mVertices.lastElement().y = y;
 		
@@ -73,6 +66,7 @@ public class PolyLine extends Shape {
 		
 		mVertexBuffer = getFloatBufferFromFloatArray(verticesArray);
 		
+		// 중앙값 설정
 		median = ShapeUtil.findMedianPoint(mVertices);
 	}
 	
@@ -90,6 +84,7 @@ public class PolyLine extends Shape {
 			break;
 		case MotionEvent.ACTION_DOWN: 
 			if (insertingShape == null) {
+				// 새로운 입력일때
 				insertingShape = new PolyLine();
 				insertingShape.setColor(option_color);
 				insertingShape.setSize(option_size);
@@ -97,6 +92,7 @@ public class PolyLine extends Shape {
 				Toast.makeText(context, "입력을 완료하면 메뉴를 눌러 완료해주세요.", Toast.LENGTH_SHORT).show();
 				renderer.getShapes().add(insertingShape);
 			}
+			// 누르면 새로운 점 추가
 			insertingShape.mVertices.add(new PointData(0f, 0f));
 			insertingShape.setLastPointPosition(event.getX(), event.getY());
 			break;
@@ -117,6 +113,7 @@ public class PolyLine extends Shape {
 			menu.add(0, 1, 0, "색 설정");
 			menu.add(0, 2, 0, "앞으로");
 		} else {
+			// 입력중일 경우
 			menu.add(0, 0, 0, "입력완료");
 		}
 		
@@ -147,6 +144,7 @@ public class PolyLine extends Shape {
 	public double calculateDistance(PointData point) {
 		double dis1 = 9999;
 		
+		// 모든 선분으로부터의 거리에서 가장 작은값 계산
 		PointData prevVertex = null;
 		for (PointData vertex : mVertices) {
 			if(prevVertex != null) {
@@ -170,7 +168,7 @@ public class PolyLine extends Shape {
 		float left, right, bottom, top;
 		left = right = mVertices.firstElement().x;
 		bottom = top = mVertices.firstElement().y;
-		
+		 
 		for (PointData vertex : mVertices) {
 			if(left > vertex.x) left = vertex.x;
 			if(right < vertex.x) right = vertex.x;
