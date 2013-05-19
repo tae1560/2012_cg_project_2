@@ -2,7 +2,6 @@ package com.example.testopengl;
 
 import android.content.Context;
 import android.opengl.GLSurfaceView;
-import android.util.Log;
 import android.view.MotionEvent;
 
 public class glesView extends GLSurfaceView {
@@ -18,14 +17,6 @@ public class glesView extends GLSurfaceView {
 	public glesRenderer getRenderer() {
 		return renderer;
 	}
-
-
-
-	private float prevX = 0;
-	private float prevY = 0;
-	private boolean isFirstTouch = true;
-	private float prevDistance = 0;
-	private boolean isFirstDistance = true;
 	
 	@Override
 	public boolean onTouchEvent(MotionEvent event) {

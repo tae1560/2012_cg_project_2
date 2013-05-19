@@ -6,8 +6,11 @@ import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.opengl.GLSurfaceView.Renderer;
 import android.opengl.GLU;
+import android.opengl.GLUtils;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
@@ -50,6 +53,8 @@ public class glesRenderer implements Renderer {
 		}
 	}
 
+	public static int mMaterialBookTexture[] = new int[1];
+	
 	@Override
 	public void onSurfaceChanged(GL10 gl, int width, int height) {
 		// viewport 를 디바이스의 화면과 일치시킴
@@ -58,6 +63,21 @@ public class glesRenderer implements Renderer {
 	    gl.glLoadIdentity();
 	    GLU.gluOrtho2D(gl, 0, width, height, 0);
 	    gl.glMatrixMode(GL10.GL_MODELVIEW);
+	    
+	    
+	    // 텍스처 등록
+	    Bitmap bitmap = BitmapFactory.decodeResource(context.getResources(), R.drawable.image);
+
+	    gl.glGenTextures(1, mMaterialBookTexture, 0);
+		gl.glBindTexture(GL10.GL_TEXTURE_2D, mMaterialBookTexture[0]);
+
+		gl.glTexParameterx(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_WRAP_S, GL10.GL_REPEAT);
+		gl.glTexParameterx(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_WRAP_T, GL10.GL_REPEAT);
+		gl.glTexParameterx(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MAG_FILTER, GL10.GL_LINEAR);
+		gl.glTexParameterx(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MIN_FILTER, GL10.GL_NEAREST);
+		gl.glPixelStorei(GL10.GL_UNPACK_ALIGNMENT, 4);
+		GLUtils.texImage2D(GL10.GL_TEXTURE_2D, 0, bitmap, 0);
+		bitmap.recycle();
 	}
 
 	
@@ -69,14 +89,15 @@ public class glesRenderer implements Renderer {
 	public static final int INPUT_CIRCLE_STATE = 4;
 	public static final int INPUT_OVAL_STATE = 5;
 	public static final int INPUT_POLYGON_STATE = 6;
-	public static final int EDIT_STATE = 7;
 	
-	public static final int EDIT_DOT_STATE = 7;
-	public static final int EDIT_LINE_STATE = 7;
-	public static final int EDIT_POLYLINE_STATE = 7;
-	public static final int EDIT_CIRCLE_STATE = 7;
-	public static final int EDIT_OVAL_STATE = 7;
-	public static final int EDIT_POLYGON_STATE = 7;
+	public static final int EDIT_STATE = 7;
+	public static final int EDIT_DOT_STATE = 8;
+	public static final int EDIT_LINE_STATE = 9;
+	public static final int EDIT_POLYLINE_STATE = 10;
+	public static final int EDIT_CIRCLE_STATE = 11;
+	public static final int EDIT_OVAL_STATE = 12;
+	public static final int EDIT_POLYGON_STATE = 13; 
+	 
 	
 	// 현재 상태
 	int state;
@@ -95,6 +116,10 @@ public class glesRenderer implements Renderer {
 		switch (state) {
 		case IDEAL_STATE: // 제일 처음 시작시 터치를 하면 메시지 출력
 			Toast.makeText(context, "기본 모드 : 메뉴버튼을 눌러 메뉴를 선택하세요.", Toast.LENGTH_SHORT).show();
+			if(selectedShape != null) {
+				selectedShape.onUnselected();
+				selectedShape = null;
+			}
 			break;
 		case INPUT_DOT_STATE: // 점 그리기
 			Dot.initialize();
@@ -112,6 +137,8 @@ public class glesRenderer implements Renderer {
 			break;
 			
 		case INPUT_CIRCLE_STATE:
+			Circle.initialize();
+			Toast.makeText(context, "원그리기 : 메뉴를 눌러 속성을 설정하고 화면에 입력하세요.", Toast.LENGTH_SHORT).show();
 			break;
 		case INPUT_OVAL_STATE:
 			break;
@@ -121,6 +148,10 @@ public class glesRenderer implements Renderer {
 			
 			break;
 		case EDIT_STATE:
+			if(selectedShape != null) {
+				selectedShape.onUnselected();
+				selectedShape = null;
+			}
 			break;
 
 		default:
@@ -129,6 +160,11 @@ public class glesRenderer implements Renderer {
 	}
 		
 	// 터치 이벤트에 대한 처리
+	Shape selectedShape = null;
+	boolean isSelecting = false;
+	boolean isFirstSingleTouch = true;
+	boolean isFirstDoubleTouch = true;
+	float prevX, prevY, prevDistance, prevRotation, prevScale;
 	public boolean onTouchEvent(MotionEvent event) {
 		switch (state) {
 		case IDEAL_STATE: // 제일 처음 시작시 터치를 하면 메시지 출력
@@ -149,6 +185,7 @@ public class glesRenderer implements Renderer {
 			break;
 			
 		case INPUT_CIRCLE_STATE:
+			Circle.onTouchEvent(event, context, this);
 			break;
 		case INPUT_OVAL_STATE:
 			break;
@@ -156,8 +193,110 @@ public class glesRenderer implements Renderer {
 			Polygon.onTouchEvent(event, context, this);
 			break;
 		case EDIT_STATE:
+			// find selected element
+			if (event.getAction() == MotionEvent.ACTION_DOWN) {
+				double min_dis = 9999;
+				Shape min_shape = null;
+				PointData point = new PointData(event.getX(), event.getY());
+				
+				for (Shape shape : shapes) {
+					double dis = shape.calculateDistance(point);
+					if (min_dis > dis) {
+						min_dis = dis;
+						min_shape = shape;
+					}
+				}
+				
+				if (min_shape != null && min_dis < 50) {
+					// finallize pre selected shape
+					if(selectedShape != null) {
+						selectedShape.onUnselected();
+					}
+					
+					// initialize selected shape
+					selectedShape = min_shape;
+//					min_shape.setColor(new ColorData(1f, 0, 0, 1f));
+					selectedShape.onSelected();
+					setState(selectedShape.getState());
+					isSelecting = true;
+				}
+			}
+			
 			break;
-
+		case EDIT_CIRCLE_STATE:
+		case EDIT_DOT_STATE:
+		case EDIT_LINE_STATE:
+		case EDIT_OVAL_STATE:
+		case EDIT_POLYGON_STATE:
+		case EDIT_POLYLINE_STATE:	
+			if(selectedShape != null) {
+//				if(selectedShape.isSelctionBoxInclude(new PointData(event.getX(), event.getY())))
+//					selectedShape.onShapeTouchEvent(event, context, this);
+					
+							
+				// drag, zoom, rotate
+				switch(event.getAction()) {
+				case MotionEvent.ACTION_UP:
+					if(!isSelecting && isFirstSingleTouch && isFirstDoubleTouch)
+						setState(EDIT_STATE);
+					
+					isFirstSingleTouch = true;
+					isFirstDoubleTouch = true;
+					isSelecting = false;
+					break;
+				case MotionEvent.ACTION_DOWN:
+					if(selectedShape.isSelctionBoxInclude(new PointData(event.getX(), event.getY())))
+						isSelecting = true;
+					break;
+				case MotionEvent.ACTION_MOVE:
+					if (event.getPointerCount() == 1 && isSelecting) {
+						// one touch => drag
+						if (!isFirstSingleTouch) {
+							
+							float diffX = event.getX() - prevX;
+							float diffY = event.getY() - prevY;
+							selectedShape.setPosition(selectedShape.getPosition().x + diffX, selectedShape.getPosition().y + diffY);
+						}
+						
+						isFirstSingleTouch = false;
+						isFirstDoubleTouch = true;
+						prevX = event.getX();
+						prevY = event.getY();
+					} else if (event.getPointerCount() == 2) {
+						// double touches => scale and rotation
+						float currentDistance = (float) (Math.pow(event.getX(0) - event.getX(1), 2) + Math.pow(event.getY(0) - event.getY(1), 2));
+						currentDistance = (float)Math.sqrt((float)currentDistance);
+						float currentRotation = (float) Math.atan((event.getY(0) - event.getY(1)) / (event.getX(0) - event.getX(1)));
+						currentRotation += Math.PI;
+						currentRotation = (float) ShapeUtil.radianToDegree(currentRotation);
+						
+						if(!isFirstDoubleTouch) {
+//							float diffDistance = currentDistance - prevDistance;
+							float diffRotation = currentRotation - prevRotation;
+							if(Math.abs(diffRotation) > 90) {
+								// arctan 가 180도 까지만 도면서 생긴 문제 해결
+								diffRotation = (Math.abs(diffRotation) - 180) * (-diffRotation / diffRotation);
+							}
+							
+							selectedShape.setRotation(selectedShape.getRotation() + diffRotation);
+							selectedShape.setScale(prevScale * currentDistance / prevDistance);
+							
+							
+						} else {
+							prevDistance = currentDistance;
+							prevScale = selectedShape.getScale();
+						}
+						
+//						Log.e("MATH", event.getX(0) - event.getX(1)  + " " + (event.getY(0) - event.getY(1)) + " " + currentRotation + " " + selectedShape.getRotation());
+						
+						isFirstDoubleTouch = false;
+						isFirstSingleTouch = true;
+						prevRotation = currentRotation;
+					}
+					break;
+				}
+			}
+			break;
 		default:
 			break;
 		}
@@ -174,10 +313,10 @@ public class glesRenderer implements Renderer {
 			menu.add(0, INPUT_DOT_STATE, 0, "점 그리기");		
 			menu.add(0, INPUT_LINE_STATE, 1, "선 그리기");
 			menu.add(0, INPUT_POLYLINE_STATE, 2, "연속선 그리기");
-//			menu.add(0, INPUT_CIRCLE_STATE, 3, "원 그리기");
+			menu.add(0, INPUT_CIRCLE_STATE, 3, "원 그리기");
 //			menu.add(0, INPUT_OVAL_STATE, 4, "타원 그리기");
 			menu.add(0, INPUT_POLYGON_STATE, 5, "다각형 그리기");
-//			menu.add(0, EDIT_STATE, 6, "편집");
+			menu.add(0, EDIT_STATE, 6, "편집");
 			break;
 		case INPUT_DOT_STATE: 
 			Dot.onPrepareOptionsMenu(menu);
@@ -191,8 +330,9 @@ public class glesRenderer implements Renderer {
 			PolyLine.onPrepareOptionsMenu(menu);
 			break;
 			
-//		case INPUT_CIRCLE_STATE:
-//			break;
+		case INPUT_CIRCLE_STATE:
+			Circle.onPrepareOptionsMenu(menu);
+			break;
 //		case INPUT_OVAL_STATE: 
 //			break;
 		case INPUT_POLYGON_STATE:
@@ -204,8 +344,20 @@ public class glesRenderer implements Renderer {
 //			Polygon.onPrepareOptionsMenu(menu);
 			
 			break;
-//		case EDIT_STATE:
-//			break;
+		case EDIT_STATE:
+			menu.add(0, 0, 0, "앞으로");		
+			break;
+			
+		case EDIT_CIRCLE_STATE:
+		case EDIT_DOT_STATE:
+		case EDIT_LINE_STATE:
+		case EDIT_OVAL_STATE:
+		case EDIT_POLYGON_STATE:
+		case EDIT_POLYLINE_STATE:
+			if(selectedShape != null) {
+				selectedShape.onShapePrepareOptionsMenu(menu);
+			}
+			break;
 
 		default:
 			break;
@@ -231,6 +383,7 @@ public class glesRenderer implements Renderer {
 			PolyLine.onOptionsItemSelected(item, context, this);
 			break;
 		case INPUT_CIRCLE_STATE: // 원 그리기
+			Circle.onOptionsItemSelected(item, context, this);
 			break;
 		case INPUT_OVAL_STATE: // 타원 그리기
 			break;
@@ -238,6 +391,17 @@ public class glesRenderer implements Renderer {
 			Polygon.onOptionsItemSelected(item, context, this);
 			break;
 		case EDIT_STATE: // 편집 모드
+			setState(IDEAL_STATE);
+			break;
+		case EDIT_CIRCLE_STATE:
+		case EDIT_DOT_STATE:
+		case EDIT_LINE_STATE:
+		case EDIT_OVAL_STATE:
+		case EDIT_POLYGON_STATE:
+		case EDIT_POLYLINE_STATE:
+			if(selectedShape != null) {
+				selectedShape.onShapeOptionsItemSelected(item, context, this);
+			}
 			break;
 		
 		default:

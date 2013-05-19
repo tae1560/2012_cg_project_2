@@ -9,8 +9,17 @@ public class PointData {
 		this.y = y;
 	}
 	
+	PointData(double x, double y) {
+		this.x = (float)x;
+		this.y = (float)y;
+	}
+	
 	PointData(PointData point) {
 		this.x = point.x;
 		this.y = point.y;
+	}
+	
+	public PointData add(PointData point) {
+		return new PointData(this.x + point.x, this.y + point.y);
 	}
 }

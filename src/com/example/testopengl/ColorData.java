@@ -30,6 +30,9 @@ public class ColorData {
 	}
 	
 	static int colorToInt(ColorData c) {
+		if (c == null) {
+			c = new ColorData(1f, 1f, 1f, 1f);
+		}
 		int rgb = Math.round(c.a * 255);
 		rgb = (rgb << 8) + Math.round(c.r * 255);
 		rgb = (rgb << 8) + Math.round(c.g * 255);
