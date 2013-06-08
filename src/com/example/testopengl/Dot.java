@@ -30,15 +30,17 @@ public class Dot extends Shape {
 		gl.glScalef(scale, scale, 1);
 		gl.glTranslatef(-median.x, -median.y, 0);
 		
-		// 선택 사각형 칠하기
-		drawSelectionBox(gl);
-		
 		// 테두리 칠하기
 		gl.glColor4f(color.r, color.g, color.b, color.a); 
 		gl.glPointSize(size);
 		
 		gl.glVertexPointer(3, GL10.GL_FLOAT, 0, mVertexBuffer);
 		gl.glDrawArrays(GL10.GL_POINTS, 0, mVertices.length / 3);
+
+		// 선택 사각형 칠하기
+		drawSelectionBox(gl);
+				
+		
 		gl.glDisableClientState(GL10.GL_VERTEX_ARRAY);     
 		
 		gl.glPopMatrix();
@@ -129,7 +131,7 @@ public class Dot extends Shape {
 	}
 	
 	// event handling on edit mode
-	public void onShapeTouchEvent(MotionEvent event, Context context, glesRenderer renderer) {
+	public boolean onShapeTouchEvent(MotionEvent event, Context context, glesRenderer renderer) {
 		switch(event.getAction()) {
 		case MotionEvent.ACTION_UP:
 			break;
@@ -138,6 +140,8 @@ public class Dot extends Shape {
 		case MotionEvent.ACTION_MOVE:
 			break;
 		}
+		
+		return false;
 	}
 	public void onShapePrepareOptionsMenu(Menu menu) {
 		menu.add(0, 0, 0, "점크기 설정");

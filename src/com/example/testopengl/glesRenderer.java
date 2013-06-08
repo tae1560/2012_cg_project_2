@@ -234,75 +234,74 @@ public class glesRenderer implements Renderer {
 		case EDIT_POLYGON_STATE:
 		case EDIT_POLYLINE_STATE:	
 			if(selectedShape != null) {
-//				if(selectedShape.isSelctionBoxInclude(new PointData(event.getX(), event.getY())))
-//					selectedShape.onShapeTouchEvent(event, context, this);
-					
-							
-				// drag, zoom, rotate
-				// 터치가 하나면 드래그, 두개면 터치간 거리는 확대축소, 터치의 각도는 회전으로 인식한다.
-				switch(event.getAction()) {
-				case MotionEvent.ACTION_UP:
-					// 외부 터치시 선택 취소
-					if(!isSelecting && isFirstSingleTouch && isFirstDoubleTouch)
-						setState(EDIT_STATE);
-					
-					isFirstSingleTouch = true;
-					isFirstDoubleTouch = true;
-					isSelecting = false;
-					break;
-				case MotionEvent.ACTION_DOWN:
-					if(selectedShape.isSelctionBoxInclude(new PointData(event.getX(), event.getY())))
-						isSelecting = true;
-					break;
-				case MotionEvent.ACTION_MOVE:
-					if (event.getPointerCount() == 1 && isSelecting) {
-						// one touch => drag
-						if (!isFirstSingleTouch) {
-							// 이동시키기
-							float diffX = event.getX() - prevX;
-							float diffY = event.getY() - prevY;
-							selectedShape.setPosition(selectedShape.getPosition().x + diffX, selectedShape.getPosition().y + diffY);
-						}
+				// shape 내부에서 true가 반환되면 터치 swallow
+				if (! selectedShape.onShapeTouchEvent(event, context, this)) {
+					// drag, zoom, rotate
+					// 터치가 하나면 드래그, 두개면 터치간 거리는 확대축소, 터치의 각도는 회전으로 인식한다.
+					switch(event.getAction()) {
+					case MotionEvent.ACTION_UP:
+						// 외부 터치시 선택 취소
+						if(!isSelecting && isFirstSingleTouch && isFirstDoubleTouch)
+							setState(EDIT_STATE);
 						
-						isFirstSingleTouch = false;
+						isFirstSingleTouch = true;
 						isFirstDoubleTouch = true;
-						prevX = event.getX();
-						prevY = event.getY();
-					} else if (event.getPointerCount() == 2) {
-						// double touches => scale and rotation
-						// 터치간 거리 계산
-						float currentDistance = (float) (Math.pow(event.getX(0) - event.getX(1), 2) + Math.pow(event.getY(0) - event.getY(1), 2));
-						currentDistance = (float)Math.sqrt((float)currentDistance);
-						
-						// 터치간 각도 계산
-						float currentRotation = (float) Math.atan((event.getY(0) - event.getY(1)) / (event.getX(0) - event.getX(1)));
-						currentRotation += Math.PI;
-						currentRotation = (float) ShapeUtil.radianToDegree(currentRotation);
-						
-						if(!isFirstDoubleTouch) {
-//							float diffDistance = currentDistance - prevDistance;
-							float diffRotation = currentRotation - prevRotation;
-							if(Math.abs(diffRotation) > 90) {
-								// arctan 가 180도 까지만 도면서 생긴 문제 해결
-								diffRotation = (Math.abs(diffRotation) - 180) * (-diffRotation / diffRotation);
+						isSelecting = false;
+						break;
+					case MotionEvent.ACTION_DOWN:
+						if(selectedShape.isSelctionBoxInclude(new PointData(event.getX(), event.getY())))
+							isSelecting = true;
+						break;
+					case MotionEvent.ACTION_MOVE:
+						if (event.getPointerCount() == 1 && isSelecting) {
+							// one touch => drag
+							if (!isFirstSingleTouch) {
+								// 이동시키기
+								float diffX = event.getX() - prevX;
+								float diffY = event.getY() - prevY;
+								selectedShape.setPosition(selectedShape.getPosition().x + diffX, selectedShape.getPosition().y + diffY);
 							}
 							
-							selectedShape.setRotation(selectedShape.getRotation() + diffRotation);
-							selectedShape.setScale(prevScale * currentDistance / prevDistance);
+							isFirstSingleTouch = false;
+							isFirstDoubleTouch = true;
+							prevX = event.getX();
+							prevY = event.getY();
+						} else if (event.getPointerCount() == 2) {
+							// double touches => scale and rotation
+							// 터치간 거리 계산
+							float currentDistance = (float) (Math.pow(event.getX(0) - event.getX(1), 2) + Math.pow(event.getY(0) - event.getY(1), 2));
+							currentDistance = (float)Math.sqrt((float)currentDistance);
 							
+							// 터치간 각도 계산
+							float currentRotation = (float) Math.atan((event.getY(0) - event.getY(1)) / (event.getX(0) - event.getX(1)));
+							currentRotation += Math.PI;
+							currentRotation = (float) ShapeUtil.radianToDegree(currentRotation);
 							
-						} else {
-							prevDistance = currentDistance;
-							prevScale = selectedShape.getScale();
+							if(!isFirstDoubleTouch) {
+//								float diffDistance = currentDistance - prevDistance;
+								float diffRotation = currentRotation - prevRotation;
+								if(Math.abs(diffRotation) > 90) {
+									// arctan 가 180도 까지만 도면서 생긴 문제 해결
+									diffRotation = (Math.abs(diffRotation) - 180) * (-diffRotation / diffRotation);
+								}
+								
+								selectedShape.setRotation(selectedShape.getRotation() + diffRotation);
+								selectedShape.setScale(prevScale * currentDistance / prevDistance);
+								
+								
+							} else {
+								prevDistance = currentDistance;
+								prevScale = selectedShape.getScale();
+							}
+							
+//							Log.e("MATH", event.getX(0) - event.getX(1)  + " " + (event.getY(0) - event.getY(1)) + " " + currentRotation + " " + selectedShape.getRotation());
+							
+							isFirstDoubleTouch = false;
+							isFirstSingleTouch = true;
+							prevRotation = currentRotation;
 						}
-						
-//						Log.e("MATH", event.getX(0) - event.getX(1)  + " " + (event.getY(0) - event.getY(1)) + " " + currentRotation + " " + selectedShape.getRotation());
-						
-						isFirstDoubleTouch = false;
-						isFirstSingleTouch = true;
-						prevRotation = currentRotation;
+						break;
 					}
-					break;
 				}
 			}
 			break;

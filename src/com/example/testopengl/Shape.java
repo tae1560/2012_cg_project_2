@@ -43,7 +43,7 @@ abstract class Shape {
 	abstract void onUnselected();
 	
 	// event handling on edit mode
-	abstract void onShapeTouchEvent(MotionEvent event, Context context, glesRenderer renderer);
+	abstract boolean onShapeTouchEvent(MotionEvent event, Context context, glesRenderer renderer);
 	abstract void onShapePrepareOptionsMenu(Menu menu);
 	abstract void onShapeOptionsItemSelected(MenuItem item, final Context context, glesRenderer renderer);
 	

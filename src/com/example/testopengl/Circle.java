@@ -5,6 +5,7 @@ import java.util.Vector;
 import javax.microedition.khronos.opengles.GL10;
 
 import android.content.Context;
+import android.graphics.Point;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
@@ -30,9 +31,6 @@ public class Circle extends Shape {
 		gl.glRotatef(rotation, 0, 0, 1);
 		gl.glScalef(scale, scale, 1);
 		gl.glTranslatef(-median.x, -median.y, 0);
-		
-		// 선택 사각형 칠하기
-		drawSelectionBox(gl);
 		
 		if (mVertexBuffer != null) {
 			gl.glVertexPointer(3, GL10.GL_FLOAT, 0, mVertexBuffer);
@@ -65,6 +63,9 @@ public class Circle extends Shape {
 			gl.glDrawArrays(GL10.GL_LINE_STRIP, 0, mVertices.length / 3);
 			gl.glPopMatrix();
 		}
+		
+		// 선택 사각형 칠하기
+		drawSelectionBox(gl);
 		
 		gl.glDisableClientState(GL10.GL_VERTEX_ARRAY);     
 		
@@ -214,15 +215,38 @@ public class Circle extends Shape {
 	}
 	
 	// event handling on edit mode
-	public void onShapeTouchEvent(MotionEvent event, Context context, glesRenderer renderer) {
+	boolean isSwalling = false;
+	PointData prevPoint = null;
+	public boolean onShapeTouchEvent(MotionEvent event, Context context, glesRenderer renderer) {
+		PointData point = new PointData(event.getX(), event.getY()); 
 		switch(event.getAction()) {
 		case MotionEvent.ACTION_UP:
+			setLastPointPosition(point);
+			isSwalling = false;
+//			prevPoint = null;
 			break;
 		case MotionEvent.ACTION_DOWN:
+			if (isSelected) {
+//				selectBoxVertices[9, 10]
+				// 모양변형
+				PointData controlPoint = new PointData(new PointData(selectBoxVertices[9], selectBoxVertices[10]));
+				double distance = ShapeUtil.distanceOfDots(localPointToGlobalPoint(controlPoint), point);
+				
+				if (distance < 50) {
+					isSwalling = true;
+				}
+			}
 			break;
 		case MotionEvent.ACTION_MOVE:
+			setLastPointPosition(localPointToGlobalPoint(point));
 			break;
 		}
+		
+		if (isSwalling) {
+			return true;
+		}
+		
+		return false;
 	}
 	public void onShapePrepareOptionsMenu(Menu menu) {
 		menu.add(0, 0, 0, "크기 설정");
